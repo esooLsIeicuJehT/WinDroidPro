@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">WinDroid Pro</string>
+    <string name="app_description">Advanced Windows Emulator for Android</string>
+    
+    <!-- Main Screen -->
+    <string name="tab_containers">Containers</string>
+    <string name="tab_apps">Apps</string>
+    <string name="tab_usb">USB</string>
+    <string name="tab_settings">Settings</string>
+    
+    <!-- Containers -->
+    <string name="containers_title">Windows Containers</string>
+    <string name="create_container">Create New Container</string>
+    <string name="container_name">Container Name</string>
+    <string name="container_description">Description</string>
+    <string name="wine_version">Wine Version</string>
+    <string name="architecture">Architecture</string>
+    
+    <!-- USB -->
+    <string name="usb_devices">USB Devices</string>
+    <string name="usb_attach">Attach Device</string>
+    <string name="usb_detach">Detach Device</string>
+    <string name="usb_no_devices">No USB devices connected</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_general">General</string>
+    <string name="settings_performance">Performance</string>
+    <string name="settings_graphics">Graphics</string>
+    <string name="settings_about">About</string>
+    
+    <!-- Notifications -->
+    <string name="notification_title">WinDroid Pro</string>
+    <string name="notification_running">Windows application running</string>
+    
+    <!-- Errors -->
+    <string name="error_wine_init">Failed to initialize Wine</string>
+    <string name="error_box64_init">Failed to initialize Box64</string>
+    <string name="error_usb_init">Failed to initialize USB</string>
+    <string name="error_app_launch">Failed to launch application</string>
+</resources>

@@ -1,0 +1,27 @@
+// Top-level build file for WinDroid Pro
+buildscript {
+    ext.kotlin_version = '1.9.22'
+    ext.compose_version = '1.6.0'
+    ext.hilt_version = '2.50'
+    
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.2.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "com.google.dagger:hilt-android-gradle-plugin:$hilt_version"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
