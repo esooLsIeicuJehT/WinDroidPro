@@ -1,7 +1,5 @@
 🎉 WinDroid Pro
 
-Welcome!
-
 A comprehensive and advanced Windows emulator for Android that significantly surpasses Winlator and all existing solutions.
 
 🚀 Quick Start 
@@ -19,53 +17,11 @@ Step 2: Open in Android Studio
 4. Wait for Gradle sync
 
 Step 3: Build the APK
-- **Easy Way**: Click Build → Build APK(s)
-- **Script Way**: Run `./build.sh` (Linux/Mac) or `build.bat` (Windows)
-- **Command Way**: Run `./gradlew assembleDebug`
+- Easy Way: Click Build → Build APK(s)
+- *cript Way: Run `./build.sh` (Linux/Mac) or `build.bat` (Windows)
+- Command Way: Run `./gradlew assembleDebug`
 
 Your APK will be in `app/build/outputs/apk/`
-
-📖 Where to Start
-
- For Quick Building:
-👉 **Read QUICK_START.md** - Get building in 5 minutes
-
-For Detailed Instructions:
-👉 **Read BUILD_INSTRUCTIONS.md** - Complete build guide with troubleshooting
-
-For Understanding the Project:
-👉 **Read TECHNICAL_SPECIFICATION.md** - Architecture and design details
-
-For Deployment:
-👉 **Read DEPLOYMENT_GUIDE.md** - How to release and distribute
-
-For Users:
-👉 **Read README.md** - User documentation and features
-
-🎯 What Makes This Special
-
-1. Superior USB OTG Support ⭐
-- **First-class USB device passthrough**
-- Native control and bulk transfers
-- Driver emulation layer
-- Support for storage, serial, HID, audio devices
-
-2. Better Than Winlator ⭐
-- Modern Material Design 3 UI
-- Professional MVVM architecture
-- Comprehensive documentation
-- Production-ready code quality
-
-3. Complete Package ⭐
-- Full source code
-- Build scripts included
-- 10,000+ words of documentation
-- Ready to build and deploy
-
-4. Target Applications ⭐
-- FRP bypass tools (Samsung, LG, Huawei)
-- iOS bypass tools (iCloud, backup extractors)
-- General Windows applications
 
 🔧 System Requirements
 
@@ -108,20 +64,6 @@ Method 3: Command Line
 # Release build
 ./gradlew assembleRelease
 ```
-
-
-Short-term (1-2 days):
-1. 🔧 Test the APK on your device
-2. 🔧 Customize branding and colors
-3. 🔧 Add app icons
-4. 🔧 Complete UI screens
-
-To Make Fully Functional (3-5 days):
-1. 🔧 Add Wine 9.x binaries
-2. 🔧 Add Box64 binaries
-3. 🔧 Add graphics libraries (Mesa, DXVK, VKD3D)
-4. 🔧 Package assets
-5. 🔧 Test with target applications
 
 Build Logs:
 Check `app/build/outputs/logs/` for detailed error messages
