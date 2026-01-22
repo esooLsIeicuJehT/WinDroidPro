@@ -33,6 +33,13 @@ data class Container(
     val enableVKD3D: Boolean = true,
     val enableBox64: Boolean = true,
     val box64Preset: String = "performance", // performance, balanced, stability
+
+    // Advanced Features
+    val enableWSL: Boolean = false,
+    val enableClipboardSharing: Boolean = true,
+    val enableNetworking: Boolean = true,
+    val enableServices: Boolean = true,
+    val servicesList: List<String> = emptyList(),
     
     // Environment variables
     val environmentVariables: Map<String, String> = emptyMap()
