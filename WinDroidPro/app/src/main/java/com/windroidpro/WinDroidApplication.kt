@@ -6,10 +6,18 @@ import android.app.NotificationManager
 import android.os.Build
 import com.windroidpro.usb.NativeUsbManager
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.system.measureTimeMillis
 
 @HiltAndroidApp
 class WinDroidApplication : Application() {
+
+    // Scope for application-wide background tasks that should outlive any specific activity
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     companion object {
         const val NOTIFICATION_CHANNEL_ID = "windroid_service"
@@ -27,8 +35,13 @@ class WinDroidApplication : Application() {
             Timber.plant(Timber.DebugTree())
         }
         
-        // Create notification channel for foreground service
-        createNotificationChannel()
+        // Create notification channel for foreground service off the main thread
+        applicationScope.launch(Dispatchers.IO) {
+            val time = measureTimeMillis {
+                createNotificationChannel()
+            }
+            Timber.d("Notification channel created in ${time}ms on background thread")
+        }
         
         Timber.d("WinDroid Pro Application initialized")
     }
