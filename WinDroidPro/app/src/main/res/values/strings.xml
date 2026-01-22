@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">WinDroid Pro</string>
     <string name="app_description">Advanced Windows Emulator for Android</string>
+    <string name="welcome_message">Welcome to %1$s</string>
     
     <!-- Main Screen -->
     <string name="tab_containers">Containers</string>

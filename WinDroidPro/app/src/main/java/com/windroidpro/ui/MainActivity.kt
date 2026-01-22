@@ -91,7 +91,7 @@ fun MainScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Welcome to " + stringResource(id = R.string.app_name),
+                text = stringResource(id = R.string.welcome_message, stringResource(id = R.string.app_name)),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
