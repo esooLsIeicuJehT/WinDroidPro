@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -49,7 +50,7 @@ fun ContainerScreen(
     }
 
     var containers by remember { mutableStateOf(initialContainers) }
-    var showCreateDialog by remember { mutableStateOf(false) }
+    var showCreateDialog by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -115,7 +116,9 @@ fun ContainerScreen(
                     val newContainer = Container(
                         name = name,
                         description = desc,
-                        prefixPath = "$filesDir/wine/${UUID.randomUUID()}"
+                        prefixPath = "$filesDir/wine/${UUID.randomUUID()}",
+                        wineVersion = "9.0-staging",
+                        box64Preset = "Balanced"
                     )
                     containers = containers + newContainer
                     showCreateDialog = false
@@ -171,7 +174,7 @@ fun ContainerItem(
                 }
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+            Divider(modifier = Modifier.padding(vertical = 12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

@@ -24,7 +24,7 @@ class ContainerActivity : ComponentActivity() {
                     ContainerScreen(
                         onBackClick = { finish() },
                         onContainerClick = { container ->
-                            Toast.makeText(this, "Launching ${container.name}...", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@ContainerActivity, "Launching ${container.name}...", Toast.LENGTH_SHORT).show()
                             // Logic to launch container would go here
                         }
                     )
