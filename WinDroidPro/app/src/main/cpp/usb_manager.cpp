@@ -1,5 +1,7 @@
 #include <jni.h>
 #include <string>
+#include <cstring>
+#include <cerrno>
 #include <android/log.h>
 #include <linux/usbdevice_fs.h>
 #include <sys/ioctl.h>
@@ -24,11 +26,18 @@ Java_com_windroidpro_usb_UsbManager_nativeOpenDevice(
     const char *path = env->GetStringUTFChars(devicePath, nullptr);
     LOGI("Opening USB device: %s", path);
     
-    int fd = open(path, O_RDWR);
+    // Open with O_NONBLOCK to avoid blocking on the open call itself
+    int fd = open(path, O_RDWR | O_NONBLOCK);
     if (fd < 0) {
         LOGE("Failed to open USB device: %s", strerror(errno));
         env->ReleaseStringUTFChars(devicePath, path);
         return -1;
+    }
+
+    // Restore blocking mode for read/write operations
+    int flags = fcntl(fd, F_GETFL);
+    if (flags >= 0) {
+        fcntl(fd, F_SETFL, flags & ~O_NONBLOCK);
     }
     
     env->ReleaseStringUTFChars(devicePath, path);
