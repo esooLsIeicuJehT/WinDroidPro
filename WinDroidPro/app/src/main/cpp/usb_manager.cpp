@@ -16,7 +16,7 @@ extern "C" {
  * Open USB device
  */
 JNIEXPORT jint JNICALL
-Java_com_windroidpro_usb_UsbManager_nativeOpenDevice(
+Java_com_windroidpro_usb_NativeUsbManager_nativeOpenDevice(
         JNIEnv *env,
         jobject /* this */,
         jstring devicePath) {
@@ -40,7 +40,7 @@ Java_com_windroidpro_usb_UsbManager_nativeOpenDevice(
  * Close USB device
  */
 JNIEXPORT void JNICALL
-Java_com_windroidpro_usb_UsbManager_nativeCloseDevice(
+Java_com_windroidpro_usb_NativeUsbManager_nativeCloseDevice(
         JNIEnv *env,
         jobject /* this */,
         jint fd) {
@@ -55,7 +55,7 @@ Java_com_windroidpro_usb_UsbManager_nativeCloseDevice(
  * Read from USB device
  */
 JNIEXPORT jint JNICALL
-Java_com_windroidpro_usb_UsbManager_nativeReadDevice(
+Java_com_windroidpro_usb_NativeUsbManager_nativeReadDevice(
         JNIEnv *env,
         jobject /* this */,
         jint fd,
@@ -82,7 +82,7 @@ Java_com_windroidpro_usb_UsbManager_nativeReadDevice(
  * Write to USB device
  */
 JNIEXPORT jint JNICALL
-Java_com_windroidpro_usb_UsbManager_nativeWriteDevice(
+Java_com_windroidpro_usb_NativeUsbManager_nativeWriteDevice(
         JNIEnv *env,
         jobject /* this */,
         jint fd,
@@ -109,7 +109,7 @@ Java_com_windroidpro_usb_UsbManager_nativeWriteDevice(
  * Control transfer
  */
 JNIEXPORT jint JNICALL
-Java_com_windroidpro_usb_UsbManager_nativeControlTransfer(
+Java_com_windroidpro_usb_NativeUsbManager_nativeControlTransfer(
         JNIEnv *env,
         jobject /* this */,
         jint fd,
@@ -159,7 +159,7 @@ Java_com_windroidpro_usb_UsbManager_nativeControlTransfer(
  * Bulk transfer
  */
 JNIEXPORT jint JNICALL
-Java_com_windroidpro_usb_UsbManager_nativeBulkTransfer(
+Java_com_windroidpro_usb_NativeUsbManager_nativeBulkTransfer(
         JNIEnv *env,
         jobject /* this */,
         jint fd,
@@ -195,7 +195,7 @@ Java_com_windroidpro_usb_UsbManager_nativeBulkTransfer(
  * Claim interface
  */
 JNIEXPORT jboolean JNICALL
-Java_com_windroidpro_usb_UsbManager_nativeClaimInterface(
+Java_com_windroidpro_usb_NativeUsbManager_nativeClaimInterface(
         JNIEnv *env,
         jobject /* this */,
         jint fd,
@@ -221,7 +221,7 @@ Java_com_windroidpro_usb_UsbManager_nativeClaimInterface(
  * Release interface
  */
 JNIEXPORT jboolean JNICALL
-Java_com_windroidpro_usb_UsbManager_nativeReleaseInterface(
+Java_com_windroidpro_usb_NativeUsbManager_nativeReleaseInterface(
         JNIEnv *env,
         jobject /* this */,
         jint fd,
