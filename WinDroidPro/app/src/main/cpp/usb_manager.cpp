@@ -16,6 +16,7 @@
 // Constants for write optimization
 constexpr int USB_WRITE_TIMEOUT_MS = 2000;
 constexpr int SMALL_WRITE_THRESHOLD = 4096;
+constexpr int SMALL_TRANSFER_THRESHOLD = 16384;
 
 extern "C" {
 
@@ -238,8 +239,37 @@ Java_com_windroidpro_usb_NativeUsbManager_nativeBulkTransfer(
     bulk.ep = endpoint;
     bulk.len = length;
     bulk.timeout = timeout;
+
+    // Optimization: Use stack buffer for small transfers to avoid JNI overhead
+    // and prevent pinning large arrays during blocking I/O
+    if (length <= SMALL_TRANSFER_THRESHOLD) {
+        jbyte buf[SMALL_TRANSFER_THRESHOLD];
+
+        // If OUT transfer (Host -> Device), copy data to stack buffer
+        // Endpoint direction is in bit 7 (0x80)
+        if ((endpoint & 0x80) == 0) {
+            env->GetByteArrayRegion(buffer, 0, length, buf);
+            if (env->ExceptionCheck()) return -1;
+        }
+
+        bulk.data = buf;
+        int result = ioctl(fd, USBDEVFS_BULK, &bulk);
+
+        if (result < 0) {
+            LOGE("Bulk transfer failed: %s", strerror(errno));
+        } else if ((endpoint & 0x80) != 0) {
+            // If IN transfer (Device -> Host) and success, copy data back
+            // ioctl returns number of bytes transferred
+            env->SetByteArrayRegion(buffer, 0, result, buf);
+            if (env->ExceptionCheck()) return -1;
+        }
+        return result;
+    }
     
+    // Fallback for larger transfers
     jbyte *buf = env->GetByteArrayElements(buffer, nullptr);
+    if (!buf) return -1;
+
     bulk.data = buf;
     
     int result = ioctl(fd, USBDEVFS_BULK, &bulk);
@@ -248,7 +278,15 @@ Java_com_windroidpro_usb_NativeUsbManager_nativeBulkTransfer(
         LOGE("Bulk transfer failed: %s", strerror(errno));
     }
     
-    env->ReleaseByteArrayElements(buffer, buf, 0);
+    // Release the array. JNI_ABORT can be used for OUT transfers if we assume
+    // GetByteArrayElements returns a copy (which we don't need to copy back).
+    // For IN, we must commit changes, so we need 0.
+    int mode = 0;
+    if ((endpoint & 0x80) == 0) {
+        mode = JNI_ABORT;
+    }
+
+    env->ReleaseByteArrayElements(buffer, buf, mode);
     return result;
 }
 
