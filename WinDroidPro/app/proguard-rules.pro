@@ -7,8 +7,17 @@
     native <methods>;
 }
 
-# Keep WinDroid Pro classes
--keep class com.windroidpro.** { *; }
+# Keep Data classes for Room and Serialization
+-keep class com.windroidpro.data.** { *; }
+
+# Keep Native Bridge and USB integration
+-keep class com.windroidpro.native_bridge.** { *; }
+-keep class com.windroidpro.usb.** { *; }
+
+# Keep Core managers and Wine service
+-keep class com.windroidpro.core.** { *; }
+-keep class com.windroidpro.wine.** { *; }
+-keep class com.windroidpro.ui.** { *; }
 
 # Keep Hilt generated classes
 -keep class dagger.hilt.** { *; }
