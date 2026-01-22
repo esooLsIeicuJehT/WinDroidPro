@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.windroidpro.data.Container
 import java.util.UUID
 
@@ -24,32 +25,10 @@ import java.util.UUID
 @Composable
 fun ContainerScreen(
     onBackClick: () -> Unit,
-    onContainerClick: (Container) -> Unit
+    onContainerClick: (Container) -> Unit,
+    viewModel: ContainerViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
-    val filesDir = context.filesDir.absolutePath
-
-    // Mock data
-    val initialContainers = remember {
-        listOf(
-            Container(
-                name = "Gaming Bottle",
-                description = "High performance setup for games",
-                prefixPath = "$filesDir/wine/gaming",
-                wineVersion = "9.0-staging",
-                box64Preset = "performance"
-            ),
-            Container(
-                name = "Office Apps",
-                description = "Stable environment for productivity",
-                prefixPath = "$filesDir/wine/office",
-                wineVersion = "8.0-stable",
-                box64Preset = "stability"
-            )
-        )
-    }
-
-    var containers by remember { mutableStateOf(initialContainers) }
+    val containers by viewModel.containers.collectAsState()
     var showCreateDialog by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
@@ -101,9 +80,7 @@ fun ContainerScreen(
                     ContainerItem(
                         container = container,
                         onClick = { onContainerClick(container) },
-                        onDelete = {
-                            containers = containers.filter { it.id != container.id }
-                        }
+                        onDelete = { viewModel.deleteContainer(container) }
                     )
                 }
             }
@@ -113,14 +90,7 @@ fun ContainerScreen(
             CreateContainerDialog(
                 onDismiss = { showCreateDialog = false },
                 onCreate = { name, desc ->
-                    val newContainer = Container(
-                        name = name,
-                        description = desc,
-                        prefixPath = "$filesDir/wine/${UUID.randomUUID()}",
-                        wineVersion = "9.0-staging",
-                        box64Preset = "Balanced"
-                    )
-                    containers = containers + newContainer
+                    viewModel.createContainer(name, desc)
                     showCreateDialog = false
                 }
             )

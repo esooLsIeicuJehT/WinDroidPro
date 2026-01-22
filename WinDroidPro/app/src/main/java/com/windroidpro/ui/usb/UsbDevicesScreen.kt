@@ -1,6 +1,9 @@
 package com.windroidpro.ui.usb
 
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
 import androidx.compose.foundation.layout.*
@@ -24,9 +27,26 @@ fun UsbDevicesScreen(
     val context = LocalContext.current
     val usbManager = remember { context.getSystemService(Context.USB_SERVICE) as? UsbManager }
 
-    // Get list of connected devices
-    // Note: This does not update dynamically on attach/detach in this simple implementation
-    val usbDevices = remember { usbManager?.deviceList?.values?.toList() ?: emptyList() }
+    var usbDevices by remember { mutableStateOf(usbManager?.deviceList?.values?.toList() ?: emptyList()) }
+
+    DisposableEffect(Unit) {
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                if (intent.action == UsbManager.ACTION_USB_DEVICE_ATTACHED ||
+                    intent.action == UsbManager.ACTION_USB_DEVICE_DETACHED) {
+                    usbDevices = usbManager?.deviceList?.values?.toList() ?: emptyList()
+                }
+            }
+        }
+        val filter = IntentFilter().apply {
+            addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED)
+            addAction(UsbManager.ACTION_USB_DEVICE_DETACHED)
+        }
+        context.registerReceiver(receiver, filter)
+        onDispose {
+            context.unregisterReceiver(receiver)
+        }
+    }
 
     Scaffold(
         topBar = {
