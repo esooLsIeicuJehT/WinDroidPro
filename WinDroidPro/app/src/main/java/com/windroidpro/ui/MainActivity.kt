@@ -1,5 +1,6 @@
 package com.windroidpro.ui
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -7,7 +8,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import dagger.hilt.android.AndroidEntryPoint
+import com.windroidpro.ui.settings.SettingsActivity
 import com.windroidpro.ui.theme.WinDroidProTheme
 import timber.log.Timber
 
@@ -35,6 +38,7 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
+    val context = LocalContext.current
     Scaffold(
         topBar = {
             TopAppBar(
@@ -88,7 +92,10 @@ fun MainScreen() {
             Spacer(modifier = Modifier.height(16.dp))
             
             Button(
-                onClick = { /* TODO: Navigate to settings */ },
+                onClick = {
+                    val intent = Intent(context, SettingsActivity::class.java)
+                    context.startActivity(intent)
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Settings")
