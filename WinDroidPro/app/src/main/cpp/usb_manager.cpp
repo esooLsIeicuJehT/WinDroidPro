@@ -1,14 +1,21 @@
 #include <jni.h>
 #include <string>
+#include <cstring>
+#include <cerrno>
 #include <android/log.h>
 #include <linux/usbdevice_fs.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <poll.h>
 
 #define LOG_TAG "UsbManager"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+
+// Constants for write optimization
+constexpr int USB_WRITE_TIMEOUT_MS = 2000;
+constexpr int SMALL_WRITE_THRESHOLD = 4096;
 
 extern "C" {
 
@@ -93,16 +100,51 @@ Java_com_windroidpro_usb_UsbManager_nativeWriteDevice(
         LOGE("Invalid file descriptor");
         return -1;
     }
-    
-    jbyte *buf = env->GetByteArrayElements(buffer, nullptr);
-    int bytes_written = write(fd, buf, length);
-    
-    if (bytes_written < 0) {
-        LOGE("Failed to write to USB device: %s", strerror(errno));
+
+    // Poll to ensure device is writable (prevents indefinite blocking)
+    struct pollfd pfd;
+    pfd.fd = fd;
+    pfd.events = POLLOUT;
+    int poll_ret = poll(&pfd, 1, USB_WRITE_TIMEOUT_MS);
+    if (poll_ret <= 0) {
+        if (poll_ret == 0) {
+            LOGE("Write timed out - device not ready");
+        } else {
+            LOGE("Poll failed: %s", strerror(errno));
+        }
+        return -1;
     }
-    
-    env->ReleaseByteArrayElements(buffer, buf, JNI_ABORT);
-    return bytes_written;
+
+    // Optimization: Use stack buffer for small writes to avoid JNI overhead
+    // and prevent pinning large arrays during blocking I/O
+    if (length <= SMALL_WRITE_THRESHOLD) {
+        jbyte buf[SMALL_WRITE_THRESHOLD];
+        // Note: Java code must ensure length <= buffer.length
+        env->GetByteArrayRegion(buffer, 0, length, buf);
+
+        if (env->ExceptionCheck()) {
+            return -1;
+        }
+
+        int bytes_written = write(fd, buf, length);
+        if (bytes_written < 0) {
+            LOGE("Failed to write to USB device: %s", strerror(errno));
+        }
+        return bytes_written;
+    } else {
+        // Fallback for larger writes
+        jbyte *buf = env->GetByteArrayElements(buffer, nullptr);
+        if (buf == nullptr) return -1;
+
+        int bytes_written = write(fd, buf, length);
+
+        if (bytes_written < 0) {
+            LOGE("Failed to write to USB device: %s", strerror(errno));
+        }
+
+        env->ReleaseByteArrayElements(buffer, buf, JNI_ABORT);
+        return bytes_written;
+    }
 }
 
 /**
