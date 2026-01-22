@@ -1,5 +1,6 @@
 package com.windroidpro.ui
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,10 +9,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import android.content.Intent
 import dagger.hilt.android.AndroidEntryPoint
+import com.windroidpro.ui.settings.SettingsActivity
 import com.windroidpro.ui.theme.WinDroidProTheme
-import com.windroidpro.ui.container.ContainerActivity
+import com.windroidpro.ui.usb.UsbDevicesScreen
 import timber.log.Timber
 
 @AndroidEntryPoint
@@ -28,9 +29,36 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen()
+                    MainNavigation()
                 }
             }
+        }
+    }
+}
+
+sealed class Screen(val route: String) {
+    object Home : Screen("home")
+    object UsbDevices : Screen("usb_devices")
+}
+
+@Composable
+fun MainNavigation() {
+    val navController = rememberNavController()
+
+    NavHost(navController = navController, startDestination = Screen.Home.route) {
+        composable(Screen.Home.route) {
+            HomeScreen(
+                onNavigateToUsbDevices = {
+                    navController.navigate(Screen.UsbDevices.route)
+                }
+            )
+        }
+        composable(Screen.UsbDevices.route) {
+            UsbDevicesScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
@@ -39,7 +67,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen() {
     val context = LocalContext.current
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -87,7 +114,7 @@ fun MainScreen() {
             Spacer(modifier = Modifier.height(16.dp))
             
             Button(
-                onClick = { /* TODO: Navigate to USB devices */ },
+                onClick = onNavigateToUsbDevices,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("USB Devices")
@@ -96,7 +123,10 @@ fun MainScreen() {
             Spacer(modifier = Modifier.height(16.dp))
             
             Button(
-                onClick = { /* TODO: Navigate to settings */ },
+                onClick = {
+                    val intent = Intent(context, SettingsActivity::class.java)
+                    context.startActivity(intent)
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Settings")

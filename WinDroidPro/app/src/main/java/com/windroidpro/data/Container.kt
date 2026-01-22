@@ -1,7 +1,12 @@
 package com.windroidpro.data
 
+import androidx.room.ColumnInfo
+import androidx.room.Embedded
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
+import androidx.room.Relation
 import java.util.UUID
 
 /**
@@ -30,17 +35,55 @@ data class Container(
     val box64Preset: String = "performance", // performance, balanced, stability
     
     // Environment variables
-    val environmentVariables: Map<String, String> = emptyMap(),
+    val environmentVariables: Map<String, String> = emptyMap()
     
-    // USB devices
-    val attachedUsbDevices: List<String> = emptyList()
+    // USB devices moved to ContainerUsbDevice entity
+)
+
+/**
+ * Represents a USB device attached to a container
+ */
+@Entity(
+    tableName = "container_usb_devices",
+    foreignKeys = [
+        ForeignKey(
+            entity = Container::class,
+            parentColumns = ["id"],
+            childColumns = ["containerId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index(value = ["containerId"])]
+)
+data class ContainerUsbDevice(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    @ColumnInfo(name = "containerId")
+    val containerId: String,
+    val usbDeviceIdentifier: String
+)
+
+/**
+ * Container with attached USB devices
+ */
+data class ContainerWithUsbDevices(
+    @Embedded val container: Container,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "containerId"
+    )
+    val usbDevices: List<ContainerUsbDevice>
 )
 
 /**
  * Container with installed applications
  */
 data class ContainerWithApps(
-    val container: Container,
+    @Embedded val container: Container,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "containerId"
+    )
     val applications: List<WindowsApplication>
 )
 
