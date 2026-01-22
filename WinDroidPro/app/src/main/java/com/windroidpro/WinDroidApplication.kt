@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
+import com.windroidpro.usb.NativeUsbManager
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 
@@ -13,15 +14,14 @@ class WinDroidApplication : Application() {
     companion object {
         const val NOTIFICATION_CHANNEL_ID = "windroid_service"
         const val NOTIFICATION_CHANNEL_NAME = "WinDroid Service"
-        
-        init {
-            System.loadLibrary("windroidpro")
-        }
     }
 
     override fun onCreate() {
         super.onCreate()
         
+        // Load the native library asynchronously
+        NativeUsbManager.loadLibraryAsync()
+
         // Initialize Timber for logging
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
