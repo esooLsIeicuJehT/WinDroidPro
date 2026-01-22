@@ -102,7 +102,10 @@ fun MainScreen() {
             Spacer(modifier = Modifier.height(32.dp))
             
             Button(
-                onClick = { /* TODO: Navigate to containers */ },
+                onClick = {
+                    val intent = Intent(context, ContainerActivity::class.java)
+                    context.startActivity(intent)
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Manage Containers")
