@@ -24,6 +24,8 @@ object NativeBridge {
     external fun initializeUSB(): Boolean
     external fun attachUSBDevice(vendorId: Int, productId: Int, fd: Int): Boolean
     external fun detachUSBDevice(deviceId: Int): Boolean
+    external fun setBox64Config(preset: String): Boolean
+    external fun optimizeMemory(): Boolean
     external fun cleanup()
     
     /**

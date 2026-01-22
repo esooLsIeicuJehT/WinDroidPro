@@ -1,8 +1,11 @@
 #include <jni.h>
 #include <android/log.h>
 #include <string>
+#include <cstring>
 #include <memory>
 #include <vector>
+#include <stdlib.h>
+#include <malloc.h>
 
 #define LOG_TAG "WinDroidPro-Native"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -160,6 +163,43 @@ Java_com_windroidpro_native_1bridge_NativeBridge_cleanup(
     usb_cleanup();
     
     LOGI("Native cleanup completed");
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_windroidpro_native_1bridge_NativeBridge_setBox64Config(
+    JNIEnv* env, jobject /* this */, jstring preset) {
+    const char* preset_str = env->GetStringUTFChars(preset, nullptr);
+    LOGI("Setting Box64 configuration for preset: %s", preset_str);
+
+    if (strcasecmp(preset_str, "performance") == 0) {
+        setenv("BOX64_DYNAREC", "1", 1);
+        setenv("BOX64_DYNAREC_STRONGMEM", "1", 1);
+        setenv("BOX64_DYNAREC_BIGBLOCK", "1", 1);
+        setenv("BOX64_DYNAREC_FORWARD", "1024", 1);
+    } else if (strcasecmp(preset_str, "stability") == 0) {
+        setenv("BOX64_DYNAREC", "1", 1);
+        setenv("BOX64_DYNAREC_SAFE", "1", 1);
+        setenv("BOX64_DYNAREC_BIGBLOCK", "0", 1);
+    } else {
+        // Balanced
+        setenv("BOX64_DYNAREC", "1", 1);
+        setenv("BOX64_DYNAREC_BIGBLOCK", "1", 1);
+    }
+
+    env->ReleaseStringUTFChars(preset, preset_str);
+    return JNI_TRUE;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_windroidpro_native_1bridge_NativeBridge_optimizeMemory(
+    JNIEnv* env, jobject /* this */) {
+    LOGI("Optimizing memory usage");
+    // Trim memory using mallopt if available
+    #ifdef M_TRIM_THRESHOLD
+    mallopt(M_TRIM_THRESHOLD, -1);
+    mallopt(M_MMAP_THRESHOLD, 128*1024);
+    #endif
+    return JNI_TRUE;
 }
 
 // Stub implementations (to be replaced with actual Wine/Box64/USB code)

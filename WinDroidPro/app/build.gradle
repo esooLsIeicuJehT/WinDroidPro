@@ -31,10 +31,20 @@ android {
         }
     }
 
+    signingConfigs {
+        release {
+            storeFile file("../keystore/release.jks")
+            storePassword "android"
+            keyAlias "windroidpro"
+            keyPassword "android"
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled true
             shrinkResources true
+            signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             
             ndk {

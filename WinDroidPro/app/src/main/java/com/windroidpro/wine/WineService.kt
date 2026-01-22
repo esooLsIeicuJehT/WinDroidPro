@@ -11,6 +11,7 @@ import com.windroidpro.core.ServiceManager
 import com.windroidpro.core.WslManager
 import com.windroidpro.data.Container
 import com.windroidpro.data.ContainerDao
+import com.windroidpro.native_bridge.NativeBridge
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -64,6 +65,12 @@ class WineService : Service() {
     // Called when a container is actually launching
     private fun configureEnvironment(container: Container) {
         Timber.i("Configuring environment for ${container.name}")
+
+        // Native optimizations
+        NativeBridge.optimizeMemory()
+        if (container.enableBox64) {
+            NativeBridge.setBox64Config(container.box64Preset)
+        }
 
         dxvkManager.installDxvk(container)
         dxvkManager.installVkd3d(container)
