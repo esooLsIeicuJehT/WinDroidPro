@@ -5,6 +5,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <poll.h>
 
 #define LOG_TAG "UsbManager"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -66,7 +67,19 @@ Java_com_windroidpro_usb_UsbManager_nativeReadDevice(
         LOGE("Invalid file descriptor");
         return -1;
     }
+
+    struct pollfd pfd;
+    pfd.fd = fd;
+    pfd.events = POLLIN;
+
+    // Wait for data availability to avoid blocking while holding JNI resources
+    int poll_result = poll(&pfd, 1, -1);
     
+    if (poll_result < 0) {
+        LOGE("Poll failed: %s", strerror(errno));
+        return -1;
+    }
+
     jbyte *buf = env->GetByteArrayElements(buffer, nullptr);
     int bytes_read = read(fd, buf, length);
     
