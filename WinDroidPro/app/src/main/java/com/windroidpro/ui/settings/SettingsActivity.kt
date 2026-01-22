@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -36,10 +37,10 @@ class SettingsActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(onBackClick: () -> Unit) {
-    var darkMode by remember { mutableStateOf(false) } // Should be linked to system/pref
-    var showFps by remember { mutableStateOf(false) }
-    var box64Preset by remember { mutableStateOf("Performance") }
-    var expanded by remember { mutableStateOf(false) }
+    var darkMode by rememberSaveable { mutableStateOf(false) } // Should be linked to system/pref
+    var showFps by rememberSaveable { mutableStateOf(false) }
+    var box64Preset by rememberSaveable { mutableStateOf("Performance") }
+    var expanded by rememberSaveable { mutableStateOf(false) }
     val presets = listOf("Performance", "Balanced", "Stability")
 
     Scaffold(
@@ -77,7 +78,7 @@ fun SettingsScreen(onBackClick: () -> Unit) {
                 onCheckedChange = { darkMode = it }
             )
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             SettingsSectionTitle("Performance")
 
@@ -124,7 +125,7 @@ fun SettingsScreen(onBackClick: () -> Unit) {
                 }
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             SettingsSectionTitle("Graphics")
 
@@ -135,7 +136,7 @@ fun SettingsScreen(onBackClick: () -> Unit) {
                 onCheckedChange = { showFps = it }
             )
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             SettingsSectionTitle("About")
             Text(
