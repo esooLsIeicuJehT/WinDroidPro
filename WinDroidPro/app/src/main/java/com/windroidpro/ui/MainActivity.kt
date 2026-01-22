@@ -9,7 +9,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import dagger.hilt.android.AndroidEntryPoint
+import com.windroidpro.R
+import com.windroidpro.ui.container.ContainerActivity
 import com.windroidpro.ui.settings.SettingsActivity
 import com.windroidpro.ui.theme.WinDroidProTheme
 import com.windroidpro.ui.usb.UsbDevicesScreen
@@ -47,7 +50,7 @@ fun MainNavigation() {
 
     NavHost(navController = navController, startDestination = Screen.Home.route) {
         composable(Screen.Home.route) {
-            HomeScreen(
+            MainScreen(
                 onNavigateToUsbDevices = {
                     navController.navigate(Screen.UsbDevices.route)
                 }
@@ -65,12 +68,14 @@ fun MainNavigation() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    onNavigateToUsbDevices: () -> Unit
+) {
     val context = LocalContext.current
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("WinDroid Pro") },
+                title = { Text(stringResource(id = R.string.app_name)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -86,7 +91,7 @@ fun MainScreen() {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Welcome to WinDroid Pro",
+                text = "Welcome to " + stringResource(id = R.string.app_name),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
@@ -94,7 +99,7 @@ fun MainScreen() {
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                text = "Advanced Windows Emulator for Android",
+                text = stringResource(id = R.string.app_description),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onBackground
             )
