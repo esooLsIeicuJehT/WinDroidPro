@@ -27,7 +27,7 @@ class RegistryManager @Inject constructor() {
      * Generates the content of a .reg file.
      * Visible for testing.
      */
-    internal fun generateRegContent(keyPath: String, valueName: String, value: String): String {
+    private fun generateRegFragment(keyPath: String, valueName: String, value: String): String {
         val finalValueName = if (valueName.isEmpty() || valueName == "@") "@" else "\"$valueName\""
 
         // Determine if value needs quotes
@@ -40,21 +40,32 @@ class RegistryManager @Inject constructor() {
             "\"$escapedValue\""
         }
 
-        return """
-            Windows Registry Editor Version 5.00
+        return "\n[$keyPath]\n$finalValueName=$finalValue\n"
+    }
 
-            [$keyPath]
-            $finalValueName=$finalValue
-        """.trimIndent()
+    /**
+     * Generates the content of a .reg file.
+     * Visible for testing.
+     */
+    internal fun generateRegContent(keyPath: String, valueName: String, value: String): String {
+        return "Windows Registry Editor Version 5.00\n" + generateRegFragment(keyPath, valueName, value)
     }
 
     fun setRegistryValue(container: Container, keyPath: String, valueName: String, value: String) {
         Timber.d("Setting registry value $keyPath\\$valueName = $value for container ${container.name}")
         try {
-            val regContent = generateRegContent(keyPath, valueName, value)
-            val tempFile = File.createTempFile("update_", ".reg")
-            tempFile.writeText(regContent)
-            applyRegistryPatch(container, tempFile)
+            val startupDir = File(container.prefixPath, "drive_c/windows/Start Menu/Programs/Startup")
+            if (!startupDir.exists()) startupDir.mkdirs()
+
+            val updateFile = File(startupDir, "user_updates.reg")
+
+            synchronized(this) {
+                if (!updateFile.exists()) {
+                    updateFile.writeText("Windows Registry Editor Version 5.00\n")
+                }
+                updateFile.appendText(generateRegFragment(keyPath, valueName, value))
+            }
+            Timber.d("Appended registry value to ${updateFile.name}")
         } catch (e: Exception) {
             Timber.e(e, "Failed to set registry value")
         }
