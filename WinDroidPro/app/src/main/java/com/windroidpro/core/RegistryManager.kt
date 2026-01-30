@@ -23,22 +23,40 @@ class RegistryManager @Inject constructor() {
         }
     }
 
-    fun setRegistryKey(container: Container, key: String, value: String) {
-        Timber.d("Setting registry key $key = $value for container ${container.name}")
-        // Create a temporary reg file and apply it
+    /**
+     * Generates the content of a .reg file.
+     * Visible for testing.
+     */
+    internal fun generateRegContent(keyPath: String, valueName: String, value: String): String {
+        val finalValueName = if (valueName.isEmpty() || valueName == "@") "@" else "\"$valueName\""
+
+        // Determine if value needs quotes
+        // dword: and hex: values are not quoted
+        val finalValue = if (value.startsWith("dword:") || value.startsWith("hex:")) {
+            value
+        } else {
+            // Escape quotes and backslashes for string values
+            val escapedValue = value.replace("\\", "\\\\").replace("\"", "\\\"")
+            "\"$escapedValue\""
+        }
+
+        return """
+            Windows Registry Editor Version 5.00
+
+            [$keyPath]
+            $finalValueName=$finalValue
+        """.trimIndent()
+    }
+
+    fun setRegistryValue(container: Container, keyPath: String, valueName: String, value: String) {
+        Timber.d("Setting registry value $keyPath\\$valueName = $value for container ${container.name}")
         try {
-            val regContent = """
-                Windows Registry Editor Version 5.00
-
-                [$key]
-                @="$value"
-            """.trimIndent()
-
+            val regContent = generateRegContent(keyPath, valueName, value)
             val tempFile = File.createTempFile("update_", ".reg")
             tempFile.writeText(regContent)
             applyRegistryPatch(container, tempFile)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to set registry key")
+            Timber.e(e, "Failed to set registry value")
         }
     }
 
