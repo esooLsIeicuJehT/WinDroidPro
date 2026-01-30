@@ -1,6 +1,7 @@
 package com.windroidpro.core
 
 import com.windroidpro.data.Container
+import com.windroidpro.native_bridge.NativeBridge
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -28,5 +29,15 @@ class WslManager @Inject constructor() {
     fun launchWslShell(container: Container) {
         Timber.d("Launching WSL shell for container ${container.name}")
         // Execute bash inside the container environment
+        if (container.enableWSL) {
+            try {
+                // Launch the WSL shim created during configuration
+                NativeBridge.executeApp("cmd.exe", "/c wsl.bat", "C:\\")
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to launch WSL shell")
+            }
+        } else {
+            Timber.w("WSL is not enabled for container ${container.name}")
+        }
     }
 }
