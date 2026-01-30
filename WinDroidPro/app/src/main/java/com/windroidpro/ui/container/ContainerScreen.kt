@@ -76,7 +76,7 @@ fun ContainerScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(containers) { container ->
+                items(containers, key = { it.id }) { container ->
                     ContainerItem(
                         container = container,
                         onClick = { onContainerClick(container) },
