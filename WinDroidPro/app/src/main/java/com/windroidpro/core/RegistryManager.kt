@@ -60,8 +60,94 @@ class RegistryManager @Inject constructor() {
         }
     }
 
-    fun getRegistryKey(container: Container, key: String): String? {
-        Timber.d("Reading registry key $key from container ${container.name}")
-        return null // Placeholder
+    fun getRegistryValue(container: Container, keyPath: String, valueName: String): String? {
+        val (hive, subKey) = splitHiveAndSubKey(keyPath) ?: return null
+        val regFileName = when (hive.uppercase()) {
+            "HKEY_LOCAL_MACHINE", "HKLM" -> "system.reg"
+            "HKEY_CURRENT_USER", "HKCU" -> "user.reg"
+            else -> return null
+        }
+
+        val regFile = File(container.prefixPath, regFileName)
+        if (!regFile.exists()) {
+            Timber.d("Registry file not found: ${regFile.absolutePath}")
+            return null
+        }
+
+        // Clean subKey (remove trailing slashes) and convert to Wine format
+        val cleanSubKey = subKey.trimEnd('\\')
+        val wineSubKey = cleanSubKey.replace("\\", "\\\\")
+        val sectionHeaderStart = "[$wineSubKey]"
+
+        val targetPrefix = if (valueName.isEmpty() || valueName == "@") "@=" else "\"$valueName\"="
+
+        return try {
+            regFile.useLines { lines ->
+                var insideTargetSection = false
+                for (line in lines) {
+                    val trimmed = line.trim()
+                    if (trimmed.startsWith("[")) {
+                        // Check if we are entering the target section
+                        // Wine sections often have timestamp at the end: [Software\\Test] 123123
+                        // We check if it starts with [Software\\Test]
+                        if (trimmed.startsWith(sectionHeaderStart, ignoreCase = true)) {
+                            insideTargetSection = true
+                        } else {
+                            if (insideTargetSection) return@useLines null // Left the section
+                            insideTargetSection = false
+                        }
+                    } else if (insideTargetSection) {
+                        if (trimmed.startsWith(targetPrefix, ignoreCase = true)) {
+                            val rawValue = trimmed.substring(targetPrefix.length)
+
+                            // Parse value
+                            if (rawValue.startsWith("\"") && rawValue.endsWith("\"")) {
+                                // String value: Unescape
+                                val content = rawValue.substring(1, rawValue.length - 1)
+                                return@useLines unescapeRegistryString(content)
+                            } else {
+                                // dword, hex, or other
+                                return@useLines rawValue
+                            }
+                        }
+                    }
+                }
+                null
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error reading registry file")
+            null
+        }
+    }
+
+    private fun splitHiveAndSubKey(keyPath: String): Pair<String, String>? {
+        val parts = keyPath.split('\\', limit = 2)
+        if (parts.size < 2) return null
+        return parts[0] to parts[1]
+    }
+
+    private fun unescapeRegistryString(value: String): String {
+        val sb = StringBuilder()
+        var i = 0
+        while (i < value.length) {
+            val c = value[i]
+            if (c == '\\' && i + 1 < value.length) {
+                val next = value[i + 1]
+                if (next == '\\') {
+                    sb.append('\\')
+                    i += 2
+                } else if (next == '"') {
+                    sb.append('"')
+                    i += 2
+                } else {
+                    sb.append(c)
+                    i++
+                }
+            } else {
+                sb.append(c)
+                i++
+            }
+        }
+        return sb.toString()
     }
 }
