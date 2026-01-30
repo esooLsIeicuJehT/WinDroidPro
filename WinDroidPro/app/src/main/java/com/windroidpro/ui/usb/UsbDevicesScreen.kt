@@ -18,25 +18,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UsbDevicesScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    viewModel: UsbDevicesViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val usbManager = remember { context.getSystemService(Context.USB_SERVICE) as? UsbManager }
+    val usbDevices by viewModel.usbDevices.collectAsState()
 
-    // Get list of connected devices
-    var usbDevices by remember { mutableStateOf(usbManager?.deviceList?.values?.toList() ?: emptyList()) }
+    LaunchedEffect(Unit) {
+        viewModel.refreshDevices()
+    }
 
-    DisposableEffect(context, usbManager) {
+    DisposableEffect(context) {
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 if (intent.action == UsbManager.ACTION_USB_DEVICE_ATTACHED ||
                     intent.action == UsbManager.ACTION_USB_DEVICE_DETACHED
                 ) {
-                    usbDevices = usbManager?.deviceList?.values?.toList() ?: emptyList()
+                    viewModel.refreshDevices()
                 }
             }
         }
