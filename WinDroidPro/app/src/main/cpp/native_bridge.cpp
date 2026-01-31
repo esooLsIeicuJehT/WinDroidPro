@@ -6,6 +6,16 @@
 #include <vector>
 #include <stdlib.h>
 #include <malloc.h>
+#include <dlfcn.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <map>
+#include <mutex>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <vector>
+#include <sstream>
+#include <iostream>
 
 #define LOG_TAG "WinDroidPro-Native"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -202,57 +212,189 @@ Java_com_windroidpro_native_1bridge_NativeBridge_optimizeMemory(
     return JNI_TRUE;
 }
 
-// Stub implementations (to be replaced with actual Wine/Box64/USB code)
+// Helper function to tokenize arguments respecting quotes
+std::vector<std::string> tokenize_args(const char* args) {
+    std::vector<std::string> tokens;
+    if (!args) return tokens;
+
+    std::string str = args;
+    std::string current_token;
+    bool in_quote = false;
+    char quote_char = 0;
+
+    for (char c : str) {
+        if (in_quote) {
+            if (c == quote_char) {
+                in_quote = false;
+            } else {
+                current_token += c;
+            }
+        } else {
+            if (c == '"' || c == '\'') {
+                in_quote = true;
+                quote_char = c;
+            } else if (c == ' ') {
+                if (!current_token.empty()) {
+                    tokens.push_back(current_token);
+                    current_token.clear();
+                }
+            } else {
+                current_token += c;
+            }
+        }
+    }
+    if (!current_token.empty()) {
+        tokens.push_back(current_token);
+    }
+    return tokens;
+}
+
+// Globals for USB management
+struct UsbDevice {
+    int vendor_id;
+    int product_id;
+    int fd;
+};
+
+std::map<int, UsbDevice> g_usb_devices;
+std::mutex g_usb_mutex;
+int g_next_device_id = 1;
+
+// Globals for Box64
+void* g_box64_handle = nullptr;
+
+// Actual implementations
 extern "C" {
     int wine_init(const char* wine_prefix, const char* wine_arch) {
-        LOGI("Wine init stub called");
+        LOGI("Initializing Wine environment");
+        if (!wine_prefix || !wine_arch) return -1;
+
+        setenv("WINEPREFIX", wine_prefix, 1);
+        setenv("WINEARCH", wine_arch, 1);
+        // Ensure standard paths are in place if needed
         return 0;
     }
     
     int wine_execute(const char* exe_path, const char* args, const char* working_dir) {
-        LOGI("Wine execute stub called");
-        return 0;
+        LOGI("Executing Wine: %s %s", exe_path, args);
+
+        // Prepare arguments
+        std::vector<std::string> tokens = tokenize_args(args);
+        std::vector<char*> argv;
+        argv.push_back(const_cast<char*>("wine"));
+        argv.push_back(const_cast<char*>(exe_path));
+        for (const auto& token : tokens) {
+            argv.push_back(const_cast<char*>(token.c_str()));
+        }
+        argv.push_back(nullptr);
+
+        pid_t pid = fork();
+        if (pid == -1) {
+            LOGE("Fork failed");
+            return -1;
+        } else if (pid == 0) {
+            // Child process
+            if (working_dir && *working_dir) {
+                if (chdir(working_dir) != 0) {
+                    LOGE("Failed to change directory to %s", working_dir);
+                }
+            }
+
+            execvp("wine", argv.data());
+
+            // If execvp returns, it failed
+            LOGE("execvp failed: %s", strerror(errno));
+            _exit(127);
+        } else {
+            // Parent process
+            int status;
+            if (waitpid(pid, &status, 0) == -1) {
+                LOGE("waitpid failed");
+                return -1;
+            }
+
+            if (WIFEXITED(status)) {
+                return WEXITSTATUS(status);
+            } else {
+                return -1;
+            }
+        }
     }
     
     void wine_cleanup() {
-        LOGI("Wine cleanup stub called");
+        LOGI("Cleaning up Wine environment");
+        unsetenv("WINEPREFIX");
+        unsetenv("WINEARCH");
     }
     
     int box64_init(const char* lib_path) {
-        LOGI("Box64 init stub called");
+        LOGI("Initializing Box64 with library: %s", lib_path);
+        if (g_box64_handle) {
+            LOGI("Box64 already initialized");
+            return 0;
+        }
+
+        g_box64_handle = dlopen(lib_path, RTLD_LAZY);
+        if (!g_box64_handle) {
+            LOGE("Failed to load Box64: %s", dlerror());
+            return -1;
+        }
         return 0;
     }
     
     void* box64_load_library(const char* lib_name) {
-        LOGI("Box64 load library stub called");
-        return nullptr;
+        LOGI("Box64 loading library: %s", lib_name);
+        void* handle = dlopen(lib_name, RTLD_LAZY);
+        if (!handle) {
+            LOGE("Failed to load library %s: %s", lib_name, dlerror());
+        }
+        return handle;
     }
     
     void* box64_get_symbol(void* handle, const char* symbol_name) {
-        LOGI("Box64 get symbol stub called");
-        return nullptr;
+        if (!handle || !symbol_name) return nullptr;
+        return dlsym(handle, symbol_name);
     }
     
     void box64_cleanup() {
-        LOGI("Box64 cleanup stub called");
+        LOGI("Cleaning up Box64");
+        if (g_box64_handle) {
+            dlclose(g_box64_handle);
+            g_box64_handle = nullptr;
+        }
     }
     
     int usb_init() {
-        LOGI("USB init stub called");
+        LOGI("Initializing USB map");
+        std::lock_guard<std::mutex> lock(g_usb_mutex);
+        g_usb_devices.clear();
         return 0;
     }
     
     int usb_attach_device(int vendor_id, int product_id, int fd) {
-        LOGI("USB attach device stub called");
-        return 1; // Return device ID
+        LOGI("Attaching USB device VID:%x PID:%x FD:%d", vendor_id, product_id, fd);
+        std::lock_guard<std::mutex> lock(g_usb_mutex);
+
+        int device_id = g_next_device_id++;
+        g_usb_devices[device_id] = {vendor_id, product_id, fd};
+        return device_id;
     }
     
     int usb_detach_device(int device_id) {
-        LOGI("USB detach device stub called");
-        return 0;
+        LOGI("Detaching USB device ID:%d", device_id);
+        std::lock_guard<std::mutex> lock(g_usb_mutex);
+
+        auto it = g_usb_devices.find(device_id);
+        if (it != g_usb_devices.end()) {
+            g_usb_devices.erase(it);
+            return 0;
+        }
+        return -1;
     }
     
     void usb_cleanup() {
-        LOGI("USB cleanup stub called");
+        LOGI("Cleaning up USB map");
+        std::lock_guard<std::mutex> lock(g_usb_mutex);
+        g_usb_devices.clear();
     }
 }
