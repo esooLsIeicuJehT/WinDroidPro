@@ -1,6 +1,7 @@
 package com.windroidpro.core
 
 import com.windroidpro.data.Container
+import com.windroidpro.native_bridge.NativeBridge
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -36,25 +37,33 @@ class ServiceManager @Inject constructor(
 
     fun startService(container: Container, serviceName: String) {
         Timber.d("Starting service $serviceName in container ${container.name}")
-        val escapedName = escapeArg(serviceName)
-        val workingDir = java.io.File(container.prefixPath, "drive_c/windows/system32").absolutePath
-        val result = commandExecutor.execute("net", "start \"$escapedName\"", workingDir)
-        if (result != 0) {
-            Timber.e("Failed to start service $serviceName (code $result)")
+        val netExe = java.io.File(container.prefixPath, "drive_c/windows/system32/net.exe")
+
+        val result = NativeBridge.executeApp(
+            exePath = netExe.absolutePath,
+            args = "start \"$serviceName\""
+        )
+
+        if (result == 0) {
+            Timber.i("Service $serviceName started successfully")
+        } else {
+            Timber.e("Failed to start service $serviceName. Exit code: $result")
         }
     }
 
     fun stopService(container: Container, serviceName: String) {
         Timber.d("Stopping service $serviceName in container ${container.name}")
-        val escapedName = escapeArg(serviceName)
-        val workingDir = java.io.File(container.prefixPath, "drive_c/windows/system32").absolutePath
-        val result = commandExecutor.execute("net", "stop \"$escapedName\"", workingDir)
-        if (result != 0) {
-            Timber.e("Failed to stop service $serviceName (code $result)")
-        }
-    }
+        val netExe = java.io.File(container.prefixPath, "drive_c/windows/system32/net.exe")
 
-    private fun escapeArg(arg: String): String {
-        return arg.replace("\"", "\\\"")
+        val result = NativeBridge.executeApp(
+            exePath = netExe.absolutePath,
+            args = "stop \"$serviceName\""
+        )
+
+        if (result == 0) {
+            Timber.i("Service $serviceName stopped successfully")
+        } else {
+            Timber.e("Failed to stop service $serviceName. Exit code: $result")
+        }
     }
 }
