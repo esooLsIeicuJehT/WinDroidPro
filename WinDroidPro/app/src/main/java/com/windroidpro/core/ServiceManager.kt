@@ -7,7 +7,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ServiceManager @Inject constructor() {
+class ServiceManager @Inject constructor(
+    private val commandExecutor: CommandExecutor
+) {
 
     fun startServices(container: Container) {
         if (!container.enableServices) {
