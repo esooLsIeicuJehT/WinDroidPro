@@ -1,6 +1,8 @@
 package com.windroidpro.core
 
 import com.windroidpro.data.Container
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -9,7 +11,7 @@ import javax.inject.Singleton
 @Singleton
 class RegistryManager @Inject constructor() {
 
-    fun applyRegistryPatch(container: Container, patchFile: File) {
+    suspend fun applyRegistryPatch(container: Container, patchFile: File) = withContext(Dispatchers.IO) {
         Timber.d("Applying registry patch ${patchFile.name} to container ${container.name}")
         // Ideally we would invoke regedit here, but we can't from here.
         // Instead we place it in a location where a startup script might pick it up.
@@ -51,7 +53,7 @@ class RegistryManager @Inject constructor() {
         return "Windows Registry Editor Version 5.00\n" + generateRegFragment(keyPath, valueName, value)
     }
 
-    fun setRegistryValue(container: Container, keyPath: String, valueName: String, value: String) {
+    suspend fun setRegistryValue(container: Container, keyPath: String, valueName: String, value: String) = withContext(Dispatchers.IO) {
         Timber.d("Setting registry value $keyPath\\$valueName = $value for container ${container.name}")
         try {
             val startupDir = File(container.prefixPath, "drive_c/windows/Start Menu/Programs/Startup")
@@ -59,7 +61,7 @@ class RegistryManager @Inject constructor() {
 
             val updateFile = File(startupDir, "user_updates.reg")
 
-            synchronized(this) {
+            synchronized(this@RegistryManager) {
                 if (!updateFile.exists()) {
                     updateFile.writeText("Windows Registry Editor Version 5.00\n")
                 }
@@ -71,18 +73,18 @@ class RegistryManager @Inject constructor() {
         }
     }
 
-    fun getRegistryValue(container: Container, keyPath: String, valueName: String): String? {
-        val (hive, subKey) = splitHiveAndSubKey(keyPath) ?: return null
+    suspend fun getRegistryValue(container: Container, keyPath: String, valueName: String): String? = withContext(Dispatchers.IO) {
+        val (hive, subKey) = splitHiveAndSubKey(keyPath) ?: return@withContext null
         val regFileName = when (hive.uppercase()) {
             "HKEY_LOCAL_MACHINE", "HKLM" -> "system.reg"
             "HKEY_CURRENT_USER", "HKCU" -> "user.reg"
-            else -> return null
+            else -> return@withContext null
         }
 
         val regFile = File(container.prefixPath, regFileName)
         if (!regFile.exists()) {
             Timber.d("Registry file not found: ${regFile.absolutePath}")
-            return null
+            return@withContext null
         }
 
         // Clean subKey (remove trailing slashes) and convert to Wine format
@@ -92,7 +94,7 @@ class RegistryManager @Inject constructor() {
 
         val targetPrefix = if (valueName.isEmpty() || valueName == "@") "@=" else "\"$valueName\"="
 
-        return try {
+        try {
             regFile.useLines { lines ->
                 var insideTargetSection = false
                 for (line in lines) {

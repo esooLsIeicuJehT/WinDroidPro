@@ -63,7 +63,7 @@ class WineService : Service() {
     }
 
     // Called when a container is actually launching
-    private fun configureEnvironment(container: Container) {
+    private suspend fun configureEnvironment(container: Container) {
         Timber.i("Configuring environment for ${container.name}")
 
         // Native optimizations

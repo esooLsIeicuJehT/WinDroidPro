@@ -10,7 +10,7 @@ class NetworkManager @Inject constructor(
     private val registryManager: RegistryManager
 ) {
 
-    fun configureNetworking(container: Container) {
+    suspend fun configureNetworking(container: Container) {
         val internetSettingsKey = "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"
 
         if (container.enableNetworking) {

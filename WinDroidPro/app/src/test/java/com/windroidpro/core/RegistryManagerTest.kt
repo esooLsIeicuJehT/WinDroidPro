@@ -1,6 +1,7 @@
 package com.windroidpro.core
 
 import com.windroidpro.data.Container
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -123,7 +124,7 @@ class RegistryManagerTest {
     }
 
     @Test
-    fun getRegistryValue_readsStringValue() {
+    fun getRegistryValue_readsStringValue() = runBlocking {
         val containerDir = tempFolder.newFolder("container_prefix")
         val userReg = File(containerDir, "user.reg")
         userReg.writeText("""
@@ -152,7 +153,7 @@ class RegistryManagerTest {
     }
 
     @Test
-    fun getRegistryValue_readsDwordValue() {
+    fun getRegistryValue_readsDwordValue() = runBlocking {
         val containerDir = tempFolder.newFolder("container_prefix_dword")
         val systemReg = File(containerDir, "system.reg")
         systemReg.writeText("""
@@ -172,7 +173,7 @@ class RegistryManagerTest {
     }
 
     @Test
-    fun getRegistryValue_readsDefaultValue() {
+    fun getRegistryValue_readsDefaultValue() = runBlocking {
         val containerDir = tempFolder.newFolder("container_prefix_default")
         val userReg = File(containerDir, "user.reg")
         userReg.writeText("""
@@ -195,7 +196,7 @@ class RegistryManagerTest {
     }
 
     @Test
-    fun getRegistryValue_returnsNullForMissingKey() {
+    fun getRegistryValue_returnsNullForMissingKey() = runBlocking {
         val containerDir = tempFolder.newFolder("container_prefix_missing")
         val userReg = File(containerDir, "user.reg")
         userReg.writeText("""
@@ -218,7 +219,7 @@ class RegistryManagerTest {
     }
 
     @Test
-    fun getRegistryValue_isCaseInsensitive() {
+    fun getRegistryValue_isCaseInsensitive() = runBlocking {
         val containerDir = tempFolder.newFolder("container_prefix_case")
         val userReg = File(containerDir, "user.reg")
         userReg.writeText("""
